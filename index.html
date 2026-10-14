@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chải Lông Mèo Tam Thể - Tiệm Mèo Xịn</title>
+    <style>
+        :root {
+            --primary-color: #f59e0b;
+            --bg-color: #fef3c7;
+        }
+        body {
+            background-color: #fbf7ee;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 15px;
+            user-select: none;
+            color: #374151;
+        }
+        h1 {
+            color: #d97706;
+            margin: 5px 0;
+            font-size: 26px;
+        }
+        .main-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            position: relative;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: #fffbe2;
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 15px;
+            border: 2px dashed #fcd34d;
+        }
+        .dashboard div span {
+            color: #d97706;
+        }
+        /* Canvas Stage */
+        .stage-box {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 0 auto 15px auto;
+            background: var(--bg-color);
+            border-radius: 50%;
+            border: 5px solid var(--primary-color);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+        .stage-box.angry {
+            animation: shake 0.12s infinite;
+            border-color: #ef4444;
+            background-color: #fee2e2;
+        }
+        @keyframes shake {
+            0% { transform: translate(3px, 3px) rotate(0deg); }
+            20% { transform: translate(-3px, -3px) rotate(-1deg); }
+            40% { transform: translate(-3px, 3px) rotate(1deg); }
+            60% { transform: translate(3px, -3px) rotate(0deg); }
+            80% { transform: translate(3px, 3px) rotate(1deg); }
+            100% { transform: translate(-3px, -3px) rotate(-1deg); }
+        }
+        .status-msg {
+            font-size: 16px;
+            font-weight: bold;
+            height: 28px;
+            margin-bottom: 15px;
+            color: #4b5563;
+        }
+        /* Buttons */
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        #brush-btn {
+            flex: 2;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+            transition: all 0.1s;
+        }
+        #brush-btn:active {
+            transform: scale(0.96);
+        }
+        #shop-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        }
+        /* Modal Shop */
+        .modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.98);
+            border-radius: 20px;
+            z-index: 10;
+            padding: 20px;
+            box-sizing: border-box;
+            flex-direction: column;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f3f4f6;
+            padding-bottom: 10px;
+        }
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d97706;
+        }
+        .close-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .shop-items {
+            overflow-y: auto;
+            flex: 1;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding-right: 5px;
+        }
+        .shop-item {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fafafa;
+        }
+        .shop-item.equipped {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+        .shop-item-name {
+            font-size: 13px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .buy-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: auto;
+            width: 100%;
+        }
+        .buy-btn.equipped-btn {
+            background: #10b981;
+        }
+        .buy-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <h1>🐾 Chải Lông Mèo 🐾</h1>
+        <p style="font-size: 13px; color: #6b7280; margin-top: 0;">Chải lông tích điểm - Đừng để mèo bắt quả tang!</p>
+
+        <div class="dashboard">
+            <div>Lông Hiện Có: <br><span id="currency">0</span> 🪮</div>
+            <div>Điểm Lần Này: <br><span id="current-score">0</span></div>
+            <div>Kỷ Lục: <br><span id="high-score">0</span></div>
+            <div>Mạng: <br><span id="lives">❤️❤️❤️</span></div>
+        </div>
+
+        <div class="stage-box" id="stage-box">
+            <canvas id="catCanvas" width="240" height="240"></canvas>
+        </div>
+
+        <div class="status-msg" id="status-msg">Nhấn hoặc giữ nút để Bắt Đầu!</div>
+
+        <div class="controls">
+            <button id="brush-btn" onmousedown="handleStart()" onmouseup="handleEnd()" ontouchstart="handleStart(event)" ontouchend="handleEnd(event)">GIỮ ĐỂ CHẢI</button>
+            <button id="shop-btn" onclick="toggleShop(true)">🛍️ SHOP</button>
+        </div>
+
+        <!-- Shop Modal -->
+        <div class="modal" id="shop-modal">
+            <div class="modal-header">
+                <div class="modal-title">🏪 Cửa Hàng Đổi Lông</div>
+                <button class="close-btn" onclick="toggleShop(false)">✕</button>
+            </div>
+            <div style="font-size: 13px; margin-top: 5px; text-align: left;">Số lông khả dụng: <b id="shop-currency" style="color: #d97706;">0</b> 🪮</div>
+            <div class="shop-items" id="shop-items-container">
+                <!-- Items populated via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ÂM THANH (Web Audio API Synthesizer) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let purrOsc = null;
+        let purrGain = null;
+
+        function playPurrSound() {
+            if (purrOsc) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                purrOsc = audioCtx.createOscillator();
+                purrGain = audioCtx.createGain();
+                
+                purrOsc.type = 'sawtooth';
+                purrOsc.frequency.setValueAtTime(45, audioCtx.currentTime); // Tần số rung rừ rừ
+
+                // LFO cho nhịp thở rừ rừ
+                let lfo = audioCtx.createOscillator();
+                let lfoGain = audioCtx.createGain();
+                lfo.frequency.setValueAtTime(3, audioCtx.currentTime);
+                lfoGain.gain.setValueAtTime(10, audioCtx.currentTime);
+                lfo.connect(purrOsc.frequency);
+                lfo.start();
+
+                purrGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                purrOsc.connect(purrGain);
+                purrGain.connect(audioCtx.destination);
+                purrOsc.start();
+            } catch(e){}
+        }
+
+        function stopPurrSound() {
+            if (purrOsc) {
+                try {
+                    purrOsc.stop();
+                    purrOsc.disconnect();
+                } catch(e){}
+                purrOsc = null;
+            }
+        }
+
+        function playGrowlSound() {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.6);
+
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.6);
+            } catch(e){}
+        }
+
+        function playBuySound() {
+            try {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.25);
+            } catch(e){}
+        }
+
+        // --- GAME STATE ---
+        let score = 0;
+        let currency = parseInt(localStorage.getItem('cat_currency')) || 0;
+        let highScore = parseInt(localStorage.getItem('cat_highscore')) || 0;
+        let lives = 3;
+        let isPlaying = false;
+        let isBrushing = false;
+        let catState = "back"; // "back", "turning", "front"
+        let gameTimer = null;
+        let brushInterval = null;
+
+        // Customization System
+        let inventory = JSON.parse(localStorage.getItem('cat_inventory')) || ['skin_calico'];
+        let equippedSkin = localStorage.getItem('cat_equipped_skin') || 'skin_calico';
+        let equippedAccessory = localStorage.getItem('cat_equipped_acc') || 'none';
+
+        const shopCatalog = [
+            { id: 'skin_calico', name: 'Mèo Tam Thể', type: 'skin', price: 0 },
+            { id: 'skin_tabby', name: 'Mèo Mướp Vàng', type: 'skin', price: 30 },
+            { id: 'skin_siamese', name: 'Mèo Xiêm', type: 'skin', price: 60 },
+            { id: 'skin_black', name: 'Mèo Huyền Tuyền', type: 'skin', price: 100 },
+            { id: 'acc_glasses', name: 'Kính Râm Cool', type: 'acc', price: 25 },
+            { id: 'acc_round_glasses', name: 'Kính Trí Thức', type: 'acc', price: 40 },
+            { id: 'acc_party_hat', name: 'Mũ Sinh Nhật', type: 'acc', price: 50 },
+            { id: 'acc_bow', name: 'Nơ Đỏ Xinh', type: 'acc', price: 35 }
+        ];
+
+        // UI Elements
+        const canvas = document.getElementById('catCanvas');
+        const ctx = canvas.getContext('2d');
+        const stageBox = document.getElementById('stage-box');
+        const statusMsg = document.getElementById('status-msg');
+        const currencyEl = document.getElementById('currency');
+        const currentScoreEl = document.getElementById('current-score');
+        const highScoreEl = document.getElementById('high-score');
+        const livesEl = document.getElementById('lives');
+        const brushBtn = document.getElementById('brush-btn');
+
+        // Initial Setup
+        updateStatsUI();
+
+        // --- CANVAS GRAPHICS RENDERER ---
+        function drawCat() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const centerX = 120;
+            const centerY = 130;
+
+            // Palette theo Skin
+            let bodyColor = "#f97316"; // Mặc định Tam Thể (Nền cam)
+            let spot1 = "#1f2937"; // Đốm đen
+            let spot2 = "#ffffff"; // Mảng trắng
+            let faceColor = "#f97316";
+
+            if (equippedSkin === 'skin_tabby') {
+                bodyColor = "#eab308"; spot1 = "#854d0e"; spot2 = "#fef08a"; faceColor = "#eab308";
+            } else if (equippedSkin === 'skin_siamese') {
+                bodyColor = "#f5f5f4"; spot1 = "#44403c"; spot2 = "#d6d3d1"; faceColor = "#44403c";
+            } else if (equippedSkin === 'skin_black') {
+                bodyColor = "#1e293b"; spot1 = "#0f172a"; spot2 = "#334155"; faceColor = "#1e293b";
+            }
+
+            if (catState === "back") {
+                // VE MEÒ QUAY LƯNG
+                // Thân mèo
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY + 20, 65, 75, 0, 0, Math.PI * 2);
+                ctx.fillStyle = bodyColor;
+                ctx.fill();
+
+                // Đốm Lưng (Nếu là Tam Thể)
+                if (equippedSkin === 'skin_calico') {
+                    ctx.beginPath();
+                    ctx.ellipse(centerX - 25, centerY, 25, 35, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = spot1;
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.ellipse(centerX + 20, centerY + 30, 30, 25, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = spot2;
+                    ctx.fill();
+                }
+
+                // Đầu Mèo (nhìn từ sau)
+                ctx.beginPath();
+                ctx.arc(centerX, centerY - 45, 45, 0, Math.PI * 2);
+                ctx.fillStyle = bodyColor;
+                ctx.fill();
+
+                // Tai Sau
+                ctx.beginPath();
+                ctx.moveTo(centerX - 35, centerY - 70);
+                ctx.lineTo(centerX - 15, centerY - 85);
+                ctx.lineTo(centerX - 5, centerY - 60);
+                ctx.fillStyle = bodyColor;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(centerX + 35, centerY - 70);
+                ctx.lineTo(centerX + 15, centerY - 85);
+                ctx.lineTo(centerX + 5, centerY - 60);
+                ctx.fillStyle = bodyColor;
+                ctx.fill();
+
+                // Đuôi ngo ngoảy
+                let tailAngle = Math.sin(Date.now() / 200) * 0.2;
+                ctx.save();
+                ctx.translate(centerX + 40, centerY + 60);
+                ctx.rotate(tailAngle);
+                ctx.beginPath();
+                ctx.quadraticCurveTo(30, -40, 10, -70);
+                ctx.lineWidth = 14;
+                ctx.lineCap = "round";
+                ctx.strokeStyle = spot1;
+                ctx.stroke();
+                ctx.restore();
+
+            } else {
+                // VE MEO QUAY MAT (front / turning)
+                // Thân Mèo
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY + 30, 60, 65, 0, 0, Math.PI * 2);
+                ctx.fillStyle = bodyColor;
+                ctx.fill();
+
+                // Bụng trắng
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY + 35, 35, 45, 0, 0, Math.PI * 2);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+
+                // Đầu Mèo
+                ctx.beginPath();
+                ctx.arc(centerX, centerY - 35, 50, 0, Math.PI * 2);
+                ctx.fillStyle = faceColor;
+                ctx.fill();
+
+                // Mảng đốm trên mặt nếu là tam thể
+                if (equippedSkin === 'skin_calico') {
+                    ctx.beginPath();
+                    ctx.arc(centerX - 25, centerY - 45, 22, 0, Math.PI * 2);
+                    ctx.fillStyle = spot1;
+                    ctx.fill();
+                }
+
+                // Tai Trước
+                ctx.beginPath();
+                ctx.moveTo(centerX - 40, centerY - 65);
+                ctx.lineTo(centerX - 20, centerY - 95);
+                ctx.lineTo(centerX - 5, centerY - 70);
+                ctx.fillStyle = bodyColor;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(centerX + 40, centerY - 65);
+                ctx.lineTo(centerX + 20, centerY - 95);
+                ctx.lineTo(centerX + 5, centerY - 70);
+                ctx.fillStyle = bodyColor;
+                ctx.fill();
+
+                // Mắt & Biểu cảm
+                if (catState === "turning") {
+                    // Mắt nghi ngờ (Tẹt xuống)
+                    ctx.fillStyle = "#000";
+                    ctx.fillRect(centerX - 25, centerY - 40, 12, 4);
+                    ctx.fillRect(centerX + 13, centerY - 40, 12, 4);
+                } else {
+                    // Mắt Tròn / Tức Giận
+                    ctx.beginPath();
+                    ctx.arc(centerX - 20, centerY - 40, 10, 0, Math.PI * 2);
+                    ctx.arc(centerX + 20, centerY - 40, 10, 0, Math.PI * 2);
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(centerX - 20, centerY - 40, 5, 0, Math.PI * 2);
+                    ctx.arc(centerX + 20, centerY - 40, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = "#000000";
+                    ctx.fill();
+                }
+
+                // Mũi & Râu
+                ctx.beginPath();
+                ctx.arc(centerX, centerY - 25, 4, 0, Math.PI * 2);
+                ctx.fillStyle = "#f43f5e";
+                ctx.fill();
+
+                // Râu mèo
+                ctx.beginPath();
+                ctx.moveTo(centerX - 10, centerY - 22); ctx.lineTo(centerX - 45, centerY - 28);
+                ctx.moveTo(centerX - 10, centerY - 20); ctx.lineTo(centerX - 45, centerY - 18);
+                ctx.moveTo(centerX + 10, centerY - 22); ctx.lineTo(centerX + 45, centerY - 28);
+                ctx.moveTo(centerX + 10, centerY - 20); ctx.lineTo(centerX + 45, centerY - 18);
+                ctx.strokeStyle = "#4b5563";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // VE PHỤ KIỆN (Trực diện)
+                drawAccessories(ctx, centerX, centerY);
+            }
+        }
+
+        function drawAccessories(ctx, centerX, centerY) {
+            if (equippedAccessory === 'acc_glasses') {
+                ctx.fillStyle = "#111827";
+                ctx.fillRect(centerX - 35, centerY - 48, 30, 16);
+                ctx.fillRect(centerX + 5, centerY - 48, 30, 16);
+                ctx.fillRect(centerX - 5, centerY - 44, 10, 4);
+            } else if (equippedAccessory === 'acc_round_glasses') {
+                ctx.strokeStyle = "#000";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(centerX - 20, centerY - 40, 13, 0, Math.PI * 2);
+                ctx.arc(centerX + 20, centerY - 40, 13, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(centerX - 7, centerY - 40);
+                ctx.lineTo(centerX + 7, centerY - 40);
+                ctx.stroke();
+            } else if (equippedAccessory === 'acc_party_hat') {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY - 110);
+                ctx.lineTo(centerX - 20, centerY - 70);
+                ctx.lineTo(centerX + 20, centerY - 70);
+                ctx.fillStyle = "#ec4899";
+                ctx.fill();
+            } else if (equippedAccessory === 'acc_bow') {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY - 10);
+                ctx.lineTo(centerX - 18, centerY - 20);
+                ctx.lineTo(centerX - 18, centerY);
+                ctx.fillStyle = "#ef4444";
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY - 10);
+                ctx.lineTo(centerX + 18, centerY - 20);
+                ctx.lineTo(centerX + 18, centerY);
+                ctx.fillStyle = "#ef4444";
+                ctx.fill();
+            }
+        }
+
+        // Loop vẽ đuôi vẫy
+        setInterval(() => {
+            drawCat();
+        }, 50);
+
+        // --- GAME LOGIC & KHÓ DẦN ---
+        function startGame() {
+            score = 0;
+            lives = 3;
+            isPlaying = true;
+            updateStatsUI();
+            brushBtn.innerText = "GIỮ ĐỂ CHẢI";
+            scheduleCatBehavior();
+        }
+
+        function scheduleCatBehavior() {
+            if (!isPlaying) return;
+
+            catState = "back";
+            stageBox.classList.remove("angry");
+            statusMsg.innerText = "Mèo đang quay lưng... Chải nhanh nào!";
+            statusMsg.style.color = "#059669";
+
+            // Thời gian quay lưng ngắn lại khi điểm càng cao (Độ khó tăng)
+            let baseBackTime = Math.max(800, 2500 - (score * 40)); 
+            let randomBackTime = baseBackTime + Math.random() * 1000;
+
+            gameTimer = setTimeout(() => {
+                if (!isPlaying) return;
+
+                // Chuẩn bị quay mặt
+                catState = "turning";
+                statusMsg.innerText = "👀 Mèo ngó nghiêng! Dừng tay lại!";
+                statusMsg.style.color = "#d97706";
+
+                let turnSpeed = Math.max(250, 600 - (score * 10)); // Nhanh dần
+
+                gameTimer = setTimeout(() => {
+                    if (!isPlaying) return;
+
+                    // Quay mặt lại hoàn toàn!
+                    catState = "front";
+                    stageBox.classList.add("angry");
+                    statusMsg.innerText = "😾 MÈO QUAY MẶT LẠI!";
+                    statusMsg.style.color = "#dc2626";
+
+                    if (isBrushing) {
+                        punishPlayer();
+                    }
+
+                    let frontTime = 1200 + Math.random() * 800;
+
+                    gameTimer = setTimeout(() => {
+                        if (isPlaying) scheduleCatBehavior();
+                    }, frontTime);
+
+                }, turnSpeed);
+
+            }, randomBackTime);
+        }
+
+        function handleStart(e) {
+            if (e) e.preventDefault();
+            if (!isPlaying) {
+                startGame();
+            }
+            isBrushing = true;
+            playPurrSound();
+
+            if (catState === "front") {
+                punishPlayer();
+                return;
+            }
+
+            // Tích điểm liên tục
+            if (!brushInterval) {
+                brushInterval = setInterval(() => {
+                    if (isBrushing && catState === "back") {
+                        score++;
+                        currency++;
+                        if (score > highScore) highScore = score;
+                        
+                        saveData();
+                        updateStatsUI();
+                    }
+                }, 200);
+            }
+        }
+
+        function handleEnd(e) {
+            if (e) e.preventDefault();
+            isBrushing = false;
+            stopPurrSound();
+            if (brushInterval) {
+                clearInterval(brushInterval);
+                brushInterval = null;
+            }
+        }
+
+        function punishPlayer() {
+            handleEnd();
+            playGrowlSound();
+            lives--;
+            updateStatsUI();
+
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                statusMsg.innerText = "💥 Bị phát hiện! Mèo cào mất 1 mạng!";
+            }
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            clearTimeout(gameTimer);
+            handleEnd();
+            stageBox.classList.add("angry");
+            statusMsg.innerText = "😿 BẠN ĐÃ THUA! Mèo quá tức giận!";
+            statusMsg.style.color = "#dc2626";
+            brushBtn.innerText = "CHƠI LẠI";
+        }
+
+        function updateStatsUI() {
+            currencyEl.innerText = currency;
+            currentScoreEl.innerText = score;
+            highScoreEl.innerText = highScore;
+            livesEl.innerText = "❤️".repeat(Math.max(0, lives));
+        }
+
+        function saveData() {
+            localStorage.setItem('cat_currency', currency);
+            localStorage.setItem('cat_highscore', highScore);
+            localStorage.setItem('cat_inventory', JSON.stringify(inventory));
+            localStorage.setItem('cat_equipped_skin', equippedSkin);
+            localStorage.setItem('cat_equipped_acc', equippedAccessory);
+        }
+
+        // --- SHOP SYSTEM ---
+        function toggleShop(open) {
+            const modal = document.getElementById('shop-modal');
+            modal.style.display = open ? 'flex' : 'none';
+            if (open) {
+                renderShop();
+            }
+        }
+
+        function renderShop() {
+            document.getElementById('shop-currency').innerText = currency;
+            const container = document.getElementById('shop-items-container');
+            container.innerHTML = '';
+
+            shopCatalog.forEach(item => {
+                const isOwned = inventory.includes(item.id);
+                const isEquipped = (item.type === 'skin' && equippedSkin === item.id) || 
+                                   (item.type === 'acc' && equippedAccessory === item.id);
+
+                const div = document.createElement('div');
+                div.className = `shop-item ${isEquipped ? 'equipped' : ''}`;
+
+                div.innerHTML = `
+                    <div class="shop-item-name">${item.name}</div>
+                    <div style="font-size: 12px; color: #6b7280; margin-bottom: 5px;">
+                        ${isOwned ? 'Đã sở hữu' : item.price + ' 🪮'}
+                    </div>
+                    <button class="buy-btn ${isEquipped ? 'equipped-btn' : ''}" 
+                        ${!isOwned && currency < item.price ? 'disabled' : ''}
+                        onclick="buyOrEquip('${item.id}')">
+                        ${isEquipped ? 'Đang Dùng' : (isOwned ? 'Trang Bị' : 'Mua')}
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function buyOrEquip(itemId) {
+            const item = shopCatalog.find(i => i.id === itemId);
+            if (!item) return;
+
+            if (!inventory.includes(itemId)) {
+                if (currency >= item.price) {
+                    currency -= item.price;
+                    inventory.push(itemId);
+                    playBuySound();
+                } else {
+                    return;
+                }
+            }
+
+            // Equip item
+            if (item.type === 'skin') {
+                equippedSkin = itemId;
+            } else if (item.type === 'acc') {
+                equippedAccessory = (equippedAccessory === itemId) ? 'none' : itemId; // Click lại để tháo
+            }
+
+            saveData();
+            updateStatsUI();
+            renderShop();
+        }
+    </script>
+</body>
+  </html>
